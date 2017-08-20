@@ -467,7 +467,8 @@ class GradientBoostingSurvivalAnalysis(BaseGradientBoosting, SurvivalAnalysisMix
                  criterion='friedman_mse',
                  min_samples_split=2,
                  min_samples_leaf=1, min_weight_fraction_leaf=0.,
-                 max_depth=3, min_impurity_split=1e-7, random_state=None,
+                 max_depth=3, min_impurity_split=None,
+                 min_impurity_decrease=0., random_state=None,
                  max_features=None, max_leaf_nodes=None,
                  subsample=1.0, dropout_rate=0.0,
                  verbose=0):
@@ -481,6 +482,7 @@ class GradientBoostingSurvivalAnalysis(BaseGradientBoosting, SurvivalAnalysisMix
                          min_weight_fraction_leaf=min_weight_fraction_leaf,
                          max_depth=max_depth,
                          min_impurity_split=min_impurity_split,
+                         min_impurity_decrease=min_impurity_decrease,
                          init=ZeroSurvivalEstimator(),
                          random_state=random_state,
                          max_features=max_features,
@@ -509,24 +511,24 @@ class GradientBoostingSurvivalAnalysis(BaseGradientBoosting, SurvivalAnalysisMix
 
         if isinstance(self.max_features, str):
             if self.max_features == "auto":
-                max_features = self.n_features
+                max_features = self.n_features_
             elif self.max_features == "sqrt":
-                max_features = max(1, int(numpy.sqrt(self.n_features)))
+                max_features = max(1, int(numpy.sqrt(self.n_features_)))
             elif self.max_features == "log2":
-                max_features = max(1, int(numpy.log2(self.n_features)))
+                max_features = max(1, int(numpy.log2(self.n_features_)))
             else:
                 raise ValueError("Invalid value for max_features: %r. "
                                  "Allowed string values are 'auto', 'sqrt' "
                                  "or 'log2'." % self.max_features)
         elif self.max_features is None:
-            max_features = self.n_features
+            max_features = self.n_features_
         elif isinstance(self.max_features, (numbers.Integral, numpy.integer)):
             if self.max_features < 1:
                 raise ValueError("max_features must be in (0, n_features]")
             max_features = self.max_features
         else:  # float
             if 0. < self.max_features <= 1.:
-                max_features = max(int(self.max_features * self.n_features), 1)
+                max_features = max(int(self.max_features * self.n_features_), 1)
             else:
                 raise ValueError("max_features must be in (0, 1.0]")
 
@@ -714,7 +716,7 @@ class GradientBoostingSurvivalAnalysis(BaseGradientBoosting, SurvivalAnalysisMix
         random_state = check_random_state(self.random_state)
 
         X, event, time = check_arrays_survival(X, y, accept_sparse=['csr', 'csc', 'coo'], dtype=DTYPE)
-        n_samples, self.n_features = X.shape
+        n_samples, self.n_features_ = X.shape
 
         X = X.astype(DTYPE)
         if sample_weight is None:
