@@ -68,7 +68,7 @@ def setup_package():
                         'numpy',
                         'pandas >=0.18, <0.21',
                         'scipy',
-                        'scikit-learn >=0.18.0, <0.19'],
+                        'scikit-learn >=0.18.0, <0.21'],
                     extras_require={
                         'tests': [
                             'nose',
